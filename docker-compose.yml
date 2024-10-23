@@ -1,0 +1,36 @@
+services:
+  
+  postgres:
+    image: postgres:latest  # Usa la última versión de PostgreSQL
+    ports:
+      - "5432:5432"  # Mapea el puerto 5432 en el host al puerto 5432 en el contenedor
+    environment:
+      POSTGRES_DB: MarcasAutos  # Nombre de la base de datos que quieres crear
+      POSTGRES_USER: postgres  # Nombre de usuario de PostgreSQL
+      POSTGRES_PASSWORD: 1234  # Contraseña para el usuario
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistencia de datos
+
+  api:
+    image: marcasautosapi
+    build:
+      context: .  # Ruta al contexto de construcción
+      dockerfile: Dockerfile  # Ruta al Dockerfile de la API
+    ports:
+      - "5000:8080"  # Mapea el puerto 5000 en el host al puerto 80 en el contenedor
+    depends_on:
+      - postgres  # Espera que PostgreSQL esté listo
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development  # Establece el entorno de ASP.NET Core
+      - ConnectionStrings__MarcasAutosConnection=Host=postgres;Port=5432;Database=MarcasAutos;Username=postgres;Password=1234
+ 
+  ef:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["dotnet", "ef", "database", "update"]
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:  # Definición del volumen para persistencia
